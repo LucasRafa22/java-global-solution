@@ -1,18 +1,16 @@
-# Java 17 (compatível com Quarkus 3)
-FROM eclipse-temurin:17-jdk AS build
+# Use the Eclipse temurin alpine official image
+# https://hub.docker.com/_/eclipse-temurin
+FROM eclipse-temurin:21-jdk-alpine
 
+# Create and change to the app directory.
 WORKDIR /app
 
-COPY . .
+# Copy local code to the container image.
+COPY . ./
 
+# Build the app.
 RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install
 
-# ---- Runtime ----
-FROM eclipse-temurin:17-jdk
-
-WORKDIR /app
-
-COPY --from=build /app/target/quarkus-app /app/quarkus-app
-
-CMD ["java", "-jar", "/app/quarkus-app/quarkus-run.jar"]
+# Run the quarkus app
+CMD ["sh", "-c", "java -jar target/quarkus-app/quarkus-run.jar"]
